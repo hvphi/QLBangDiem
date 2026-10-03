@@ -8,11 +8,18 @@ from datetime import timezone
 
 from pyhanko.pdf_utils.reader import PdfFileReader
 from pyhanko.sign import validation
+from pyhanko_certvalidator import ValidationContext
 
 
 def signature_detail(embedded_signature):
     try:
-        status = validation.validate_pdf_signature(embedded_signature)
+        # This bridge reports integrity only, with trust explicitly not checked.
+        # Do not depend on the host's certificate store for that policy.
+        context = ValidationContext(trust_roots=[], allow_fetching=False)
+        status = validation.validate_pdf_signature(
+            embedded_signature, signer_validation_context=context,
+            ts_validation_context=context,
+        )
     except Exception:
         return {
             "status": "INVALID",
@@ -81,17 +88,8 @@ def verify(pdf_bytes):
             "signatures": [],
         }
 
-    # This follows the rule used by the supplied main.py: at least two embedded
-    # signatures are required before their integrity is evaluated.
-    if len(embedded_signatures) < 2:
-        return {
-            "status": "INVALID",
-            "sha256": digest,
-            "signatureCount": len(embedded_signatures),
-            "reason": "INSUFFICIENT_SIGNATURES",
-            "signatures": [],
-        }
-
+    # Lecturer submissions need one signature. The approval endpoint separately
+    # requires the lecturer and department-head signatures before archiving.
     signatures = [signature_detail(sig) for sig in embedded_signatures]
     all_intact = all(signature["status"] == "VALID" for signature in signatures)
     return {
@@ -115,4 +113,5 @@ if __name__ == "__main__":
             "reason": "PDF_MALFORMED_OR_SIGNATURE_UNREADABLE",
             "signatures": [],
         }
-    sys.stdout.write(json.dumps(result, ensure_ascii=False, separators=(",", ":")))
+    # The Java caller expects UTF-8, including Vietnamese signer names on Windows.
+    sys.stdout.buffer.write(json.dumps(result, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))

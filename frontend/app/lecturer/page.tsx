@@ -63,7 +63,7 @@ export default function LecturerPage() {
         </div>
       </div>
       <aside className="panel"><div className="panel-header"><div><h2 className="panel-title">Nộp bảng điểm đã ký</h2><div className="panel-subtitle">Tải lên PDF hoàn tất bằng vSignPDF</div></div><span className="stat-icon">↑</span></div><div className="panel-body">
-        <div className="alert info" style={{ marginBottom: 15 }}>Hệ thống kiểm tra chữ ký phía máy chủ. Hồ sơ chỉ được tiếp nhận khi chữ ký và chuỗi tin cậy được xác minh đầy đủ.</div>
+        <div className="alert info" style={{ marginBottom: 15 }}>Tải lên bảng điểm có chữ ký số của giảng viên. Hệ thống kiểm tra tính toàn vẹn và chuyển hồ sơ được tiếp nhận đến trưởng khoa để ký duyệt.</div>
         {error && <div className="alert error" style={{ marginBottom: 12 }} role="alert">{error}</div>}{message && <div className="alert success" style={{ marginBottom: 12 }} role="status">{message}</div>}
         <form className="form-grid" onSubmit={submit}>
           <div className="field"><label htmlFor="course-class">Lớp học phần</label><select className="select" id="course-class" required value={courseId} onChange={(e) => setCourseId(e.target.value)}><option value="">Chọn lớp học phần</option>{classes.map((item) => <option key={item.id} value={item.id} disabled={item.locked}>{item.courseClassCode} — {item.subjectName}</option>)}</select></div>

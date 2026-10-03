@@ -13,6 +13,11 @@ jobs:
           java-version: '21'
           cache: maven
       - run: mvn -B -f backend/pom.xml verify
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r backend/verification/requirements.txt
+      - run: python -m unittest discover -s backend/verification/src/test/python
   frontend:
     runs-on: ubuntu-latest
     steps:

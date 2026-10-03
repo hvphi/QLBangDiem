@@ -73,6 +73,9 @@ public class SubmissionController {
         if (!LocalImmutableStorage.sha256(bytes).equalsIgnoreCase(result.sha256())) {
             result = new VerificationResult("INVALID", LocalImmutableStorage.sha256(bytes), result.signatureCount(), "HASH_MISMATCH", result.signatures());
         }
+        if ("VALID".equals(result.status()) && result.signatureCount() < 1) {
+            result = new VerificationResult("INVALID", result.sha256(), 0, "NO_SIGNATURE", result.signatures());
+        }
         if (!"VALID".equals(result.status())) {
             audit.record(actor, "SUBMISSION_VERIFY", "course_class", courseClassId, result.status(),
                     Map.of("fileName", fileName, "sha256", result.sha256(), "reason", result.reason()));
