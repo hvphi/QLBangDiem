@@ -1,0 +1,118 @@
+services:
+  gateway:
+    image: nginx:1.29-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    secrets:
+      - tls_certificate
+      - tls_key
+    depends_on:
+      - frontend
+      - core
+    networks: [edge, core-net]
+    read_only: true
+    tmpfs: [/var/cache/nginx, /var/run]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ../..
+      dockerfile: infra/deploy/Dockerfile.frontend
+      args:
+        NEXT_PUBLIC_API_BASE: ""
+        NEXT_PUBLIC_LOCAL_DEMO: "false"
+    expose: ["3000"]
+    networks: [edge]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    restart: unless-stopped
+
+  core:
+    build:
+      context: ../..
+      dockerfile: infra/deploy/Dockerfile.core
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      SERVER_PORT: 8080
+      DB_URL: jdbc:postgresql://postgres:5432/qlbangdiem
+      DB_USERNAME: ${DB_USERNAME:?Set DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD:?Inject DB_PASSWORD from the host secret store}
+      OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:?Set OIDC_ISSUER_URI}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:?Set OIDC_CLIENT_ID}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?Inject OIDC_CLIENT_SECRET}
+      OIDC_REDIRECT_URI: ${OIDC_REDIRECT_URI:?Set the registered HTTPS callback URL}
+      VERIFICATION_URL: http://verification:8081
+      VERIFICATION_SERVICE_TOKEN: ${VERIFICATION_SERVICE_TOKEN:?Set service token from the host secret store}
+      STORAGE_MODE: minio
+      STORAGE_ENDPOINT: ${STORAGE_ENDPOINT:?Set school MinIO or S3 endpoint}
+      STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY:?Inject storage access key}
+      STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY:?Inject storage secret key}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:?Set the immutable transcript bucket}
+    expose: ["8080"]
+    networks: [core-net, verification-net]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      verification:
+        condition: service_healthy
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    restart: unless-stopped
+
+  verification:
+    build:
+      context: ../..
+      dockerfile: infra/deploy/Dockerfile.verification
+    environment:
+      VERIFICATION_ADDRESS: 0.0.0.0
+      VERIFICATION_PORT: 8081
+      VERIFICATION_SERVICE_TOKEN: ${VERIFICATION_SERVICE_TOKEN:?Set service token from the host secret store}
+    expose: ["8081"]
+    networks: [verification-net]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16.10-alpine
+    environment:
+      POSTGRES_DB: qlbangdiem
+      POSTGRES_USER: ${DB_USERNAME:?Set DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Inject DB_PASSWORD from the host secret store}
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    networks: [core-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d qlbangdiem"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+
+networks:
+  edge: {}
+  core-net:
+    internal: true
+  verification-net:
+    internal: true
+
+volumes:
+  postgres-data: {}
+
+secrets:
+  tls_certificate:
+    file: ${TLS_CERTIFICATE_FILE:?Provide TLS_CERTIFICATE_FILE outside the repository}
+  tls_key:
+    file: ${TLS_KEY_FILE:?Provide TLS_KEY_FILE outside the repository}

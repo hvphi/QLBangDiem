@@ -1,0 +1,193 @@
+Dựa trên tài liệu hướng dẫn quy trình ký số và nộp bảng điểm điện tử tại VKU, dưới đây là bản **Tài liệu Yêu cầu Sản phẩm (Product Requirement Document - PRD)** chi tiết cho **Website Ký số và Quản lý Bảng điểm Đã ký số**, được thiết kế theo góc nhìn toàn diện (**Full-Role SDLC**).
+
+---
+
+# TÀI LIỆU YÊU CẦU SẢN PHẨM (PRD)
+
+## Hệ thống Ký số và Quản lý Bảng điểm Điện tử (VKU E-Gradebook)
+
+---
+
+### 1. TỔNG QUAN SẢN PHẨM (PRODUCT OVERVIEW)
+
+* **Tên hệ thống:** VKU E-Gradebook System.
+* **Mục tiêu:** Chuyển đổi số hoàn toàn quy trình nộp và quản lý bảng điểm từ bản giấy sang bản điện tử có ký số xác thực, đảm bảo tính toàn vẹn, bảo mật, minh bạch và tối ưu hóa thời gian xử lý cho Giảng viên, Trưởng khoa và Phòng Khảo thí.
+
+
+* **Đối tượng sử dụng (Users):**
+1. **Giảng viên (GV):** Xuất bảng điểm, thực hiện ký số và gửi phê duyệt.
+
+
+2. **Trưởng khoa (TK):** Duyệt bảng điểm và thực hiện ký số thứ hai.
+
+
+3. **Phòng Khảo thí (KT):** Kiểm tra tính hợp lệ chữ ký số, lưu trữ và quản lý kho bảng điểm.
+
+
+4. **Quản trị hệ thống (Admin):** Quản lý phân quyền, cấu hình danh mục và sao lưu dữ liệu.
+
+
+
+
+
+---
+
+### 2. LUỒNG QUY TRÌNH NGHIỆP VỤ (BUSINESS WORKFLOW)
+
+```
+[Hệ thống Đào tạo] --(1. Xuất PDF)--> [Giảng viên]
+                                           |
+                                      (2. Ký số lần 1)[cite: 1]
+                                           |
+                                  (3. Gửi phê duyệt)[cite: 1]
+                                           v
+                                    [Trưởng khoa]
+                                           |
+                                      (4. Ký số lần 2)[cite: 1]
+                                           |
+                                  (5. Xác thực chữ ký & Nộp tự động )[cite: 1]
+                                           v
+                                   [Phòng Khảo thí]
+                                           |
+                             (6. Lưu trữ)[cite: 1]
+
+```
+
+---
+
+### 3. YÊU CẦU CHỨC NĂNG (FUNCTIONAL REQUIREMENTS)
+
+#### 3.1. Phân hệ Giảng viên (Teacher Module)
+
+* **FR-GV-01: Quản lý & Xuất Bảng điểm**
+* Tích hợp lấy dữ liệu từ Hệ thống Đào tạo để kết xuất file bảng điểm dạng PDF.
+
+
+* Tự động chuẩn hóa tên file theo định dạng: `MaLHP_TenMon_HocKy_Namhoc_TenGiangVien.pdf`.
+
+
+
+
+* **FR-GV-02: Ký số Chuyên dụng**
+* Hỗ trợ ký số trực tiếp trên Web hoặc tích hợp plugin/tool ký số (vSignPDF/VGCA).
+
+
+* Đặt vị trí Chữ ký số tại ô "Giảng viên" trên file PDF.
+
+
+
+
+* **FR-GV-03: Trình duyệt Bảng điểm**
+* Gửi file đã ký số lên hệ thống để Trưởng khoa phê duyệt (thay thế gửi qua ứng dụng chat ngoài).
+
+
+* Theo dõi trạng thái bảng điểm (Đã gửi, Trưởng khoa đã ký, Bị từ chối, Phòng Khảo thí đã duyệt).
+
+
+
+#### 3.2. Phân hệ Trưởng khoa (Department Head Module)
+
+* **FR-TK-01: Duyệt & Kiểm tra Bảng điểm**
+* Bảng điều khiển (Dashboard) hiển thị danh sách bảng điểm chờ phê duyệt theo Khoa/Bộ môn.
+* Xem nhanh file PDF trực tiếp trên giao diện web.
+
+
+* **FR-TK-02: Ký số Phê duyệt**
+* Thực hiện ký số xác nhận vào vị trí "Trưởng khoa" trên file PDF đã có chữ ký Giảng viên.
+
+
+* Đảm bảo giữ nguyên tính toàn vẹn chữ ký của Giảng viên (không làm hỏng/hủy hiệu lực chữ ký cũ).
+
+
+
+
+* **FR-TK-03: Từ chối / Trả lại**
+* Cho phép từ chối phê duyệt kèm lý do để Giảng viên cập nhật/ký lại.
+
+
+
+#### 3.3. Phân hệ Phòng Khảo thí (Testing & Quality Assurance Module)
+
+* **FR-KT-01: Tiếp nhận & Kiểm tra Chữ ký số**
+* Tự động kiểm tra tính hợp lệ của cả 02 chữ ký số (GV & TK) trên file PDF bằng thư viện xác thực chữ ký số PKI/VGCA.
+
+
+* Cảnh báo ngay nếu file bị chỉnh sửa, thiếu chữ ký hoặc chữ ký không hợp lệ.
+
+
+
+
+* **FR-KT-02: Cấu trúc Lưu trữ Tự động**
+* Tự động phân loại lưu trữ theo cây thư mục: `Năm học` -> `Học kỳ` -> `Khoa` -> `Tên LHP`.
+
+
+* Tự động đồng bộ/lưu trữ an toàn vào Kho dữ liệu điện tử của trường.
+
+
+
+
+* **FR-KT-03: Tìm kiếm & Tra cứu**
+* Tra cứu nâng cao theo Năm học, Học kỳ, Khoa, Mã LHP, Tên môn, Tên giảng viên.
+
+
+
+
+
+---
+
+### 4. YÊU CẦU PHI CHỨC NĂNG (NON-FUNCTIONAL REQUIREMENTS)
+
+* **NFR-01: Bảo mật & Phân quyền (Security & Access Control)**
+* Áp dụng cơ chế Phân quyền dựa trên vai trò (RBAC).
+* Đặt quyền **"Chỉ xem" (Read-Only)** đối với các tệp/thư mục bảng điểm sau khi đã hết thời hạn nộp để tránh chỉnh sửa trái phép.
+
+
+* Mã hóa đường truyền HTTPS/TLS và mã hóa dữ liệu lưu trữ (Data at Rest).
+
+
+* **NFR-02: An toàn dữ liệu & Sao lưu (Backup & Recovery)**
+* Tự động sao lưu định kỳ (Periodic Backup) dữ liệu bảng điểm sang hệ thống Cloud/Ổ cứng dự phòng của nhà trường.
+
+
+
+
+* **NFR-03: Tính Toàn vẹn (Integrity)**
+* Ngăn chặn tuyệt đối hành vi chuyển đổi định dạng file (ví dụ: in ra scan lại) gây mất hiệu lực chữ ký số.
+
+
+
+
+* **NFR-04: Hiệu năng & Khả năng mở rộng (Performance & Scalability)**
+* Thời gian phản hồi xác thực chữ ký số: < 3 giây/file.
+* Hỗ trợ xử lý đồng thời hàng nghìn yêu cầu ký và nộp điểm trong đợt cao điểm cuối kỳ.
+
+
+
+---
+
+### 5. KIẾN TRÚC & TÍCH HỢP HỆ THỐNG (SYSTEM ARCHITECTURE & INTEGRATIONS)
+
+* **Tích hợp phần mềm ký số:** Tích hợp API/SDK xác thực chữ ký số PKI của Ban Cơ yếu Chính phủ (VGCA) hoặc phần mềm vSignPDF.
+
+
+* **Tích hợp Hệ thống Đào tạo (UIS/ERP):** Đã kết nối để lấy danh sách Lớp học phần, Giảng viên và xuất mẫu Bảng điểm PDF chuẩn.
+
+
+* **Hệ thống Lưu trữ (Storage):** Tích hợp Cloud Storage (Google Drive Enterprise/AWS S3) hoặc Kho lưu trữ dữ liệu điện tử nội bộ VKU.
+
+
+
+---
+
+### 6. TIÊU CHÍ TRIỂN KHAI & CHẤP NHẬN (ACCEPTANCE CRITERIA)
+
+1. Giảng viên và Trưởng khoa ký số thành công trên cùng một file PDF mà không làm mất hiệu lực chữ ký của nhau.
+
+
+2. Hệ thống cảnh báo chính xác khi phát hiện file PDF bị thay đổi nội dung sau khi ký.
+
+
+3. Bảng điểm nộp thành công được lưu tự động đúng cấu trúc cây thư mục phân loại.
+
+
+4. Sau hạn nộp, tài khoản không có quyền Admin/Khảo thí chỉ có thể xem, không thể xóa hoặc đè file.

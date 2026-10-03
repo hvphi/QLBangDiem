@@ -1,0 +1,41 @@
+server:
+  port: ${SERVER_PORT:8080}
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: ${SESSION_COOKIE_SECURE:true}
+        same-site: lax
+spring:
+  application:
+    name: qlbangdiem-core
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/qlbangdiem}
+    username: ${DB_USERNAME:qlbangdiem}
+    password: ${DB_PASSWORD}
+  flyway:
+    enabled: true
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 21MB
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+app:
+  auth:
+    demo-mode: false
+  storage:
+    mode: ${STORAGE_MODE}
+    root: ${STORAGE_ROOT:./storage}
+    max-file-bytes: ${MAX_FILE_BYTES:20971520}
+  verification:
+    base-url: ${VERIFICATION_URL:http://127.0.0.1:8081}
+    service-token: ${VERIFICATION_SERVICE_TOKEN}

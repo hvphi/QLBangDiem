@@ -1,0 +1,11 @@
+{
+  "name": "qlbangdiem-signing-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/client.js",
+  "types": "./src/client.d.ts",
+  "scripts": {
+    "test": "node --test"
+  }
+}

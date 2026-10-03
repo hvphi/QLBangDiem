@@ -1,0 +1,15 @@
+.tools/
+.local/
+**/target/
+**/node_modules/
+**/.next/
+**/out/
+**/coverage/
+.env
+.env.*
+!.env.example
+storage/
+*.log
+**/__pycache__/
+*.py[cod]
+*.tsbuildinfo

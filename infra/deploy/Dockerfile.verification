@@ -1,0 +1,12 @@
+FROM eclipse-temurin:21-jre-jammy
+RUN apt-get update && apt-get install -y --no-install-recommends curl python3 python3-venv && rm -rf /var/lib/apt/lists/*
+WORKDIR /opt/qlbangdiem
+COPY backend/verification/target/verification-1.0.0-SNAPSHOT.jar /opt/qlbangdiem/app.jar
+COPY backend/verification/requirements.txt /opt/qlbangdiem/requirements.txt
+RUN python3 -m venv /opt/pyhanko-venv && /opt/pyhanko-venv/bin/pip install --no-cache-dir -r /opt/qlbangdiem/requirements.txt
+RUN chown -R 10002:10002 /opt/qlbangdiem
+USER 10002:10002
+ENV VERIFICATION_PYTHON=/opt/pyhanko-venv/bin/python
+EXPOSE 8081
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD curl -fsS http://127.0.0.1:8081/internal/health || exit 1
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=50", "-jar", "/opt/qlbangdiem/app.jar"]

@@ -1,0 +1,9 @@
+FROM eclipse-temurin:21-jre-jammy
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+WORKDIR /opt/qlbangdiem
+COPY backend/core/target/core-1.0.0-SNAPSHOT.jar /opt/qlbangdiem/app.jar
+RUN chown -R 10001:10001 /opt/qlbangdiem
+USER 10001:10001
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 CMD curl -fsS http://127.0.0.1:8080/actuator/health/readiness || exit 1
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=70", "-jar", "/opt/qlbangdiem/app.jar"]

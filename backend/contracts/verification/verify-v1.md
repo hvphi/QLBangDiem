@@ -1,0 +1,3 @@
+# Internal verification contract v1
+
+Core sends one PDF as multipart `file` to `POST /internal/v1/verify` with `X-Service-Token`. The isolated service returns the SHA-256, overall status (`VALID`, `INVALID`, `REVOKED`, `EXPIRED`, `UNKNOWN`, or `UNAVAILABLE`), signature count, signer metadata, and stable reason codes. Requests are limited to 20 MiB. The endpoint must remain inside the core-to-verification network boundary. A PDF without a signature or with a broken CMS/byte range is `INVALID`; an intact CMS signature without configured CA trust and revocation/TSA checks remains `UNKNOWN` and cannot advance workflow.
